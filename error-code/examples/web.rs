@@ -5,14 +5,13 @@ use axum::{
 };
 use backtrace::Backtrace;
 use error_code::ToErrorInfo;
-use http::StatusCode;
 use thiserror::Error;
 use tokio::net::TcpListener;
 use tracing::{info, warn};
 
 #[allow(dead_code)]
 #[derive(Debug, Error, ToErrorInfo)]
-#[error_info(app_type = "StatusCode", prefix = "0A")]
+#[error_info(app_type = "u16", prefix = "0A")]
 enum AppError {
     #[error("Invalid param: {0}")]
     #[error_info(code = "IP", app_code = "400")]
@@ -61,16 +60,19 @@ impl IntoResponse for AppError {
 
         let status = info.app_code;
 
-        if status.is_server_error() {
+        if status > 500 {
             warn!("{:?}", info);
         } else {
             info!("{:?}", info);
         }
 
+        let body = serde_json::to_string(&info).unwrap();
+
         // use client-facing message
         Response::builder()
             .status(status)
-            .body(info.to_string().into())
+            .header("Content-Type", "application/json")
+            .body(body.into())
             .unwrap()
     }
 }

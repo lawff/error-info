@@ -2,11 +2,16 @@ use core::fmt;
 use std::str::FromStr;
 
 pub use error_code_derive::ToErrorInfo;
+use serde::{Deserialize, Serialize};
 
+#[derive(Serialize, Deserialize)]
 pub struct ErrorInfo<T> {
-    pub app_code: T,        // could be HTTP 400 bad request
+    #[serde(skip)]
+    pub app_code: T, // could be HTTP 400 bad request
     pub code: &'static str, // something like "01E739"
+    #[serde(rename = "msg")]
     pub client_msg: &'static str,
+    #[serde(skip)]
     pub server_msg: String,
 }
 
